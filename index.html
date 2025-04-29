@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Números Primos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #120826; /* UI/UX-1-hex */
+            color: #fff;
+        }
+        .container {
+            background-color: #1E0F40; /* UI/UX-2-hex */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: white; /* UI/UX-4-hex */
+            text-align: center;
+        }
+        .input-group {
+            margin: 20px 0;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #44238C;
+            border-radius: 4px;
+            background-color: #1E0F40;
+            color: #fff;
+            width: 80%;
+            max-width: 400px;
+        }
+        input::placeholder {
+            color: #5F3DD9; /* UI/UX-4-hex */
+            opacity: 0.7;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #44238C; /* UI/UX-3-hex */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #5F3DD9; /* UI/UX-4-hex */
+        }
+        button:disabled {
+            background-color: #1E0F40; /* UI/UX-2-hex */
+            cursor: not-allowed;
+        }
+        #resultado {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #120826; /* UI/UX-1-hex */
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .numero-primo {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #24591C; /* UI/UX-5-hex */
+            border-radius: 4px;
+            color: white;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #1E0F40;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #5F3DD9;
+            border-radius: 8px;
+            transition: width 0.3s;
+        }
+        .pagination {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .pagination button {
+            margin: 0 5px;
+            padding: 5px 10px;
+        }
+        .error {
+            color: #5F3DD9; /* UI/UX-4-hex */
+            text-align: center;
+            margin-top: 10px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            color: #5F3DD9; /* UI/UX-4-hex */
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generador de Números Primos</h1>
+        <div class="input-group">
+            <input type="number" id="cantidad" placeholder="Ingrese la cantidad de primos" min="1" max="10000">
+            <button onclick="mostrarPrimos()" id="btnGenerar">Mostrar Primos</button>
+        </div>
+        <div class="progress-bar" id="progressBar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div id="resultado"></div>
+        <div class="pagination" id="pagination" style="display: none;">
+            <button onclick="cambiarPagina(-1)" id="btnAnterior">Anterior</button>
+            <span id="paginaActual">Página 1</span>
+            <button onclick="cambiarPagina(1)" id="btnSiguiente">Siguiente</button>
+        </div>
+    </div>
+    <footer>
+        Brandon Morales Web &copy; 2025
+    </footer>
+
+    <script>
+        let primosGenerados = [];
+        let paginaActual = 0;
+        const primosPorPagina = 100;
+        const MAX_PRIMOS = 10000;
+
+        function esPrimo(n) {
+            if (n < 2) return false;
+            if (n === 2) return true;
+            if (n % 2 === 0) return false;
+            for (let i = 3; i <= Math.sqrt(n); i += 2) {
+                if (n % i === 0) return false;
+            }
+            return true;
+        }
+
+        function mostrarPrimos() {
+            const cantidad = parseInt(document.getElementById('cantidad').value);
+            if (isNaN(cantidad) || cantidad < 1) {
+                mostrarError('Por favor, ingrese un número válido mayor que 0');
+                return;
+            }
+            if (cantidad > MAX_PRIMOS) {
+                mostrarError(`El número máximo permitido es ${MAX_PRIMOS}`);
+                return;
+            }
+
+            document.getElementById('btnGenerar').disabled = true;
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('resultado').innerHTML = '';
+            primosGenerados = [];
+            paginaActual = 0;
+
+            // Usar setTimeout para no bloquear la UI
+            setTimeout(() => {
+                let contador = 0;
+                let numero = 2;
+                const total = cantidad;
+
+                function generarSiguiente() {
+                    if (contador < total) {
+                        if (esPrimo(numero)) {
+                            primosGenerados.push(numero);
+                            contador++;
+                            const progreso = (contador / total) * 100;
+                            document.getElementById('progress').style.width = progreso + '%';
+                        }
+                        numero++;
+                        setTimeout(generarSiguiente, 0);
+                    } else {
+                        document.getElementById('btnGenerar').disabled = false;
+                        document.getElementById('progressBar').style.display = 'none';
+                        mostrarPagina(0);
+                    }
+                }
+
+                generarSiguiente();
+            }, 0);
+        }
+
+        function mostrarPagina(pagina) {
+            const inicio = pagina * primosPorPagina;
+            const fin = Math.min(inicio + primosPorPagina, primosGenerados.length);
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '';
+
+            for (let i = inicio; i < fin; i++) {
+                const primoElement = document.createElement('div');
+                primoElement.className = 'numero-primo';
+                primoElement.textContent = `#${i + 1} = ${primosGenerados[i]}`;
+                resultado.appendChild(primoElement);
+            }
+
+            document.getElementById('paginaActual').textContent = `Página ${pagina + 1}`;
+            document.getElementById('pagination').style.display = 'block';
+            document.getElementById('btnAnterior').disabled = pagina === 0;
+            document.getElementById('btnSiguiente').disabled = fin >= primosGenerados.length;
+        }
+
+        function cambiarPagina(delta) {
+            const nuevaPagina = paginaActual + delta;
+            const maxPaginas = Math.ceil(primosGenerados.length / primosPorPagina);
+            if (nuevaPagina >= 0 && nuevaPagina < maxPaginas) {
+                paginaActual = nuevaPagina;
+                mostrarPagina(paginaActual);
+            }
+        }
+
+        function mostrarError(mensaje) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = mensaje;
+            document.getElementById('resultado').innerHTML = '';
+            document.getElementById('resultado').appendChild(errorDiv);
+        }
+    </script>
+</body>
+</html> 
